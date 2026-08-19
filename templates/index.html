@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Gestionale</title>
+    <style>
+        :root {
+            --app-bg: #121824;
+            --app-card: rgba(26, 34, 50, 0.85);
+            --app-text: #ffffff;
+            --app-subtext: #8e9bae;
+            --app-accent-blue: #38ef7d;
+            --app-blue-gradient: linear-gradient(135deg, #0071e3 0%, #00d2ff 100%);
+            --app-gold: #ffd700;
+            --app-red: #ff453a;
+            --app-border: rgba(255, 255, 255, 0.1);
+            --radius-main: 20px;
+            --radius-sm: 12px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--app-bg);
+            color: var(--app-text);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* HEADER SUPERIORE */
+        header {
+            height: 65px;
+            background: rgba(18, 24, 36, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--app-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .header-brand { display: flex; align-items: center; gap: 10px; }
+        .header-logo { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; }
+
+        .btn-toggle-menu {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--app-border);
+            font-size: 15px;
+            cursor: pointer;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--app-text);
+            font-weight: 600;
+        }
+        .btn-toggle-menu:hover { 
+            background: var(--app-blue-gradient); 
+            border-color: transparent;
+            box-shadow: 0 0 15px rgba(0, 113, 227, 0.4);
+        }
+
+        .user-nav { display: flex; align-items: center; gap: 15px; }
+        .user-badge { font-size: 14px; font-weight: 500; color: var(--app-subtext); }
+
+        /* MENU A SCOMPARSA (DRAWER) */
+        .sidebar-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 290px;
+            height: 100vh;
+            background: rgba(20, 26, 38, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-right: 1px solid var(--app-border);
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar-drawer.open { transform: translateX(0); }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--app-border);
+        }
+
+        .drawer-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--app-subtext);
+        }
+
+        .sidebar-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--app-text);
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-btn:hover { 
+            background: rgba(255, 255, 255, 0.05); 
+            border-color: var(--app-border);
+        }
+        .sidebar-btn.active { 
+            background: var(--app-blue-gradient); 
+            color: #ffffff; 
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 113, 227, 0.3);
+        }
+
+        /* OVERLAY OSCURANTE */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .drawer-overlay.active { opacity: 1; pointer-events: auto; }
+
+        /* CONTENUTO PRINCIPALE */
+        main {
+            flex: 1;
+            padding: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--app-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--app-border);
+            border-radius: var(--radius-main);
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 25px;
+        }
+
+        .section { display: none; }
+        .section.active { display: block; }
+        .sub-section { display: none; }
+        .sub-section.active { display: block; }
+
+        h2 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; margin-top: 0; margin-bottom: 20px; color: var(--app-text); }
+        h3 { font-size: 17px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: var(--app-subtext); }
+
+        /* FORM CONTROLS */
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 13px; font-weight: 500; color: var(--app-subtext); margin-bottom: 6px; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(10, 15, 24, 0.8);
+            border: 1px solid var(--app-border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            color: var(--app-text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: #0071e3; }
+
+        .row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .col { flex: 1; min-width: 200px; }
+
+        /* BUTTONS */
+        button.btn-apple {
+            background: var(--app-blue-gradient);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        button.btn-apple:hover { opacity: 0.9; box-shadow: 0 4px 15px rgba(0, 113, 227, 0.4); }
+        button.btn-danger { background: var(--app-red); color: white; border: none; padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
+        button.btn-danger:hover { opacity: 0.85; }
+        button.btn-warning { background: #ff9500; color: white; border: none; padding: 8px 14px; border-radius: var(--radius-sm); cursor: pointer; }
+
+        /* NAV SOTTO-MENU IMPOSTAZIONI */
+        .settings-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--app-border);
+            padding-bottom: 12px;
+            overflow-x: auto;
+        }
+        .settings-tab-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--app-border);
+            color: var(--app-subtext);
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .settings-tab-btn:hover { color: var(--app-text); background: rgba(255, 255, 255, 0.1); }
+        .settings-tab-btn.active {
+            background: var(--app-blue-gradient);
+            color: #ffffff;
+            border-color: transparent;
+            font-weight: 600;
+        }
+
+        .settings-pane { display: none; }
+        .settings-pane.active { display: block; }
+
+        /* TABELLE */
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; }
+        th { font-size: 12px; text-transform: uppercase; color: var(--app-subtext); padding: 12px; border-bottom: 1px solid var(--app-border); text-align: left; }
+        td { padding: 14px 12px; border-bottom: 1px solid var(--app-border); font-size: 14px; background: rgba(255, 255, 255, 0.02); }
+        tr:last-child td { border-bottom: none; }
+
+        .img-preview { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
+
+        /* FOOTER */
+        footer {
+            background: rgba(18, 24, 36, 0.6);
+            border-top: 1px solid var(--app-border);
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+            color: var(--app-subtext);
+        }
+
+        .login-wrapper { max-width: 380px; margin: 60px auto; text-align: center; }
+        .login-logo { width: 110px; height: 110px; border-radius: 22px; margin-bottom: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
+        
+        .crediti-box { line-height: 1.6; color: var(--app-text); }
+        .crediti-box strong { color: #00d2ff; }
+    </style>
+
+    <!-- SDK Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- SDK PDF.JS per lettura PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+<!-- OVERLAY OSCURANTE -->
+<div id="drawer-overlay" class="drawer-overlay" onclick="toggleMenu(false)"></div>
+
+<!-- HEADER SUPERIORE -->
+<header>
+    <div class="header-left">
+        <button id="btn-menu" class="btn-toggle-menu" onclick="toggleMenu(true)" style="display:none;">
+            ☰ <span>Menu</span>
+        </button>
+        <div class="header-brand">
+            <img src="input_file_0.png" class="header-logo" alt="Logo">
+        </div>
+    </div>
+    <div class="user-nav" id="user-info-header" style="display:none;">
+        <span id="label-utente" class="user-badge"></span>
+        <button class="btn-danger" onclick="logout()">Esci</button>
+    </div>
+</header>
+
+<!-- MENU OPERATORE -->
+<aside id="menu-operatore" class="sidebar-drawer">
+    <div class="drawer-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <img src="input_file_0.png" style="width:28px; height:28px; border-radius:6px;" alt="Logo">
+            <strong>Navigazione</strong>
+        </div>
+        <button class="drawer-close" onclick="toggleMenu(false)">✕</button>
+    </div>
+    <button class="sidebar-btn active" onclick="switchOpTab('rapportini', this)">📝 Rapportini</button>
+    <button class="sidebar-btn" onclick="switchOpTab('turni', this)">📅 Turni e Riposi</button>
+    <button class="sidebar-btn" onclick="switchOpTab('spese', this)">📸 Note Spese</button>
+</aside>
+
+<!-- MENU AMMINISTRATORE -->
+<aside id="menu-admin" class="sidebar-drawer">
+    <div class="drawer-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <img src="input_file_0.png" style="width:28px; height:28px; border-radius:6px;" alt="Logo">
+            <strong>Navigazione</strong>
+        </div>
+        <button class="drawer-close" onclick="toggleMenu(false)">✕</button>
+    </div>
+    <button class="sidebar-btn active" onclick="switchAdminTab('adm-rapportini', this)">📋 Rapportini Cantiere</button>
+    <button class="sidebar-btn" onclick="switchAdminTab('operatori', this)">👥 Gestione Utenti</button>
+    <button class="sidebar-btn" onclick="switchAdminTab('inventario', this)">📦 Inventario & Importazioni</button>
+    <button class="sidebar-btn" onclick="switchAdminTab('adm-turni', this)">📅 Registro Turni</button>
+    <button class="sidebar-btn" onclick="switchAdminTab('adm-spese', this)">💳 Note Spese</button>
+    <button class="sidebar-btn" onclick="switchAdminTab('impostazioni', this)">⚙️ Impostazioni</button>
+</aside>
+
+<!-- LOGIN SCREEN -->
+<div id="sec-login" class="section active">
+    <div class="card login-wrapper">
+        <img src="input_file_0.png" class="login-logo" alt="Logo">
+        <h2>Accedi</h2>
+        <form onsubmit="effettuaLogin(event)">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="login-username" placeholder="Nome utente" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn-apple" style="width:100%; margin-top:10px; padding:12px;">Accedi</button>
+        </form>
+    </div>
+</div>
+
+<!-- CONTENUTO OPERATORE -->
+<main id="sec-operatore" class="section">
+    <div id="sub-op-rapportini" class="sub-section active">
+        <h2>Compila Rapportino</h2>
+        <div class="card">
+            <div class="row">
+                <div class="col form-group"><label>Data</label><input type="date" id="rap-data"></div>
+                <div class="col form-group"><label>Cantiere / Cliente</label><input type="text" id="rap-cantiere" placeholder="Nome Cantiere"></div>
+                <div class="col form-group"><label>Ore Lavorate</label><input type="number" id="rap-ore" step="0.5" placeholder="8"></div>
+            </div>
+            <div class="form-group"><label>Descrizione e Spiegazione Cantiere</label><textarea id="rap-spiegazione" rows="3" placeholder="Dettaglio attività svolte..."></textarea></div>
+            <div class="form-group"><label>Materiali Utilizzati</label><textarea id="rap-materiali" rows="2" placeholder="Elenco materiali..."></textarea></div>
+            <button class="btn-apple" onclick="salvaRapportino()">Invia Rapportino</button>
+        </div>
+        <h3>I Miei Rapportini Invio Interno</h3>
+        <table>
+            <thead><tr><th>Data</th><th>Cantiere</th><th>Ore</th><th>Spiegazione</th><th>Materiali</th></tr></thead>
+            <tbody id="corpo-miei-rapportini"></tbody>
+        </table>
+    </div>
+
+    <div id="sub-op-turni" class="sub-section">
+        <h2>Gestione Turni</h2>
+        <div class="card">
+            <div class="row">
+                <div class="col form-group"><label>Data</label><input type="date" id="turno-data"></div>
+                <div class="col form-group">
+                    <label>Stato / Turno</label>
+                    <select id="turno-tipo">
+                        <option>Turno Mattina (08:00 - 16:00)</option>
+                        <option>Turno Pomeriggio (14:00 - 22:00)</option>
+                        <option>Turno Notte (22:00 - 06:00)</option>
+                        <option>Riposo</option>
+                        <option>Ferie / Permesso</option>
+                        <option>Malattia</option>
+                    </select>
+                </div>
+                <div class="col form-group"><label>Note</label><input type="text" id="turno-note"></div>
+            </div>
+            <button class="btn-apple" onclick="salvaTurnoOperatore()">Salva Turno</button>
+        </div>
+        <h3>I Miei Turni</h3>
+        <table>
+            <thead><tr><th>Data</th><th>Stato/Turno</th><th>Note</th></tr></thead>
+            <tbody id="corpo-miei-turni"></tbody>
+        </table>
+    </div>
+
+    <div id="sub-op-spese" class="sub-section">
+        <h2>Note Spese</h2>
+        <div class="card">
+            <div class="row">
+                <div class="col form-group"><label>Data</label><input type="date" id="spesa-data"></div>
+                <div class="col form-group">
+                    <label>Categoria</label>
+                    <select id="spesa-cat">
+                        <option>Carburante</option><option>Pasto / Ristorante</option><option>Materiale Urgente</option><option>Pedaggio / Parcheggio</option><option>Altro</option>
+                    </select>
+                </div>
+                <div class="col form-group"><label>Importo (€)</label><input type="number" id="spesa-importo" step="0.01" placeholder="0.00"></div>
+            </div>
+            <div class="form-group"><label>Ricevuta / Foto</label><input type="file" id="spesa-foto" accept="image/*" capture="environment"></div>
+            <div class="form-group"><label>Descrizione</label><input type="text" id="spesa-desc"></div>
+            <button class="btn-apple" onclick="salvaNotaSpesa()">Invia Spesa</button>
+        </div>
+        <h3>Le Mie Spese</h3>
+        <table>
+            <thead><tr><th>Data</th><th>Categoria</th><th>Importo</th><th>Descrizione</th><th>Foto</th></tr></thead>
+            <tbody id="corpo-mie-spese"></tbody>
+        </table>
+    </div>
+</main>
+
+<!-- CONTENUTO AMMINISTRATORE -->
+<main id="sec-amministratore" class="section">
+    <div id="sub-adm-rapportini" class="sub-section active">
+        <h2>Rapportini Cantiere (Ricezione Interna)</h2>
+        <table>
+            <thead><tr><th>Data</th><th>Utente</th><th>Cantiere</th><th>Ore</th><th>Spiegazione</th><th>Materiali</th></tr></thead>
+            <tbody id="corpo-adm-rapportini"></tbody>
+        </table>
+    </div>
+
+    <div id="sub-operatori" class="sub-section">
+        <h2>Gestione Utenti</h2>
+        <div class="card">
+            <h3>Aggiungi Utente</h3>
+            <div class="row">
+                <div class="col"><input type="text" id="new-op-nome" placeholder="Nome Completo"></div>
+                <div class="col"><input type="text" id="new-op-user" placeholder="Username"></div>
+                <div class="col"><input type="text" id="new-op-pass" placeholder="Password"></div>
+                <div class="col"><button class="btn-apple" onclick="creaOperatore()">Crea</button></div>
+            </div>
+        </div>
+        <h3>Utenti Attivi</h3>
+        <table>
+            <thead><tr><th>Nome</th><th>Username</th><th>Password</th><th>Azione</th></tr></thead>
+            <tbody id="corpo-lista-operatori"></tbody>
+        </table>
+    </div>
+
+    <div id="sub-inventario" class="sub-section">
+        <h2>Inventario Magazzino</h2>
+        
+        <div class="row">
+            <div class="col card">
+                <h3>📄 Carica Documento PDF</h3>
+                <p style="font-size:12px; color:var(--app-subtext); margin-bottom:12px;">Carica una bolla, fattura o lista articoli in formato PDF per estrarre ed aggiornare le giacenze.</p>
+                <input type="file" id="pdf-file" accept=".pdf" style="margin-bottom: 15px;">
+                <button class="btn-apple" onclick="importaFatturaPDF()">Elabora PDF</button>
+            </div>
+            
+            <div class="col card">
+                <h3>📑 Carica Fattura XML</h3>
+                <p style="font-size:12px; color:var(--app-subtext); margin-bottom:12px;">Carica un file di Fatturazione Elettronica XML.</p>
+                <input type="file" id="xml-file" accept=".xml" style="margin-bottom: 15px;">
+                <button class="btn-apple" onclick="importaFatturaXML()">Elabora XML</button>
+            </div>
+        </div>
+
+        <h3>Giacenze Magazzino</h3>
+        <table>
+            <thead><tr><th>Prodotto</th><th>Giacenza</th><th>Azione</th></tr></thead>
+            <tbody id="corpo-inventario"></tbody>
+        </table>
+    </div>
+
+    <div id="sub-adm-turni" class="sub-section">
+        <h2>Registro Turni</h2>
+        <table>
+            <thead><tr><th>Data</th><th>Utente</th><th>Stato/Turno</th><th>Note</th></tr></thead>
+            <tbody id="corpo-adm-turni"></tbody>
+        </table>
+    </div>
+
+    <div id="sub-adm-spese" class="sub-section">
+        <h2>Note Spese Ricevute</h2>
+        <table>
+            <thead><tr><th>Data</th><th>Utente</th><th>Categoria</th><th>Importo</th><th>Descrizione</th><th>Foto</th></tr></thead>
+            <tbody id="corpo-adm-spese"></tbody>
+        </table>
+    </div>
+
+    <!-- IMPOSTAZIONI COMPLETA CON SOTTO-MENU -->
+    <div id="sub-impostazioni" class="sub-section">
+        <h2>Impostazioni</h2>
+        
+        <div class="settings-nav">
+            <button class="settings-tab-btn active" onclick="switchSettingsPane('pane-credenziali', this)">🔒 Credenziali Admin</button>
+            <button class="settings-tab-btn" onclick="switchSettingsPane('pane-assistenza', this)">🛠️ Assistenza Remota</button>
+            <button class="settings-tab-btn" onclick="switchSettingsPane('pane-reset', this)">⚠️ Reset & Dati</button>
+            <button class="settings-tab-btn" onclick="switchSettingsPane('pane-crediti', this)">📜 Crediti & Diritti</button>
+        </div>
+
+        <!-- Sotto-Menu 1: Credenziali Admin -->
+        <div id="pane-credenziali" class="settings-pane active">
+            <div class="card" style="max-width:500px;">
+                <h3>Modifica Username e Password</h3>
+                <div class="form-group"><label>Nuovo Username</label><input type="text" id="edit-admin-user"></div>
+                <div class="form-group"><label>Nuova Password</label><input type="password" id="edit-admin-pass"></div>
+                <button class="btn-apple" onclick="salvaCredenzialiAdmin()">Salva Modifiche</button>
+            </div>
+        </div>
+
+        <!-- Sotto-Menu 2: Assistenza Remota -->
+        <div id="pane-assistenza" class="settings-pane">
+            <div class="card" style="max-width:550px;">
+                <h3>Genera Accesso Temporaneo Assistenza</h3>
+                <p style="font-size:13px; color:var(--app-subtext);">Crea credenziali temporanee monouso o a durata limitata per consentire al supporto da remoto di accedere al sistema.</p>
+                <button class="btn-apple" onclick="generaCredenzialiAssistenza()">Genera Ora Credenziali Temporanee</button>
+                
+                <div id="box-assistenza-temp" style="display:none; margin-top:20px; padding:15px; background:rgba(0,113,227,0.15); border:1px solid #0071e3; border-radius:var(--radius-sm);">
+                    <div style="font-size:14px; font-weight:600; margin-bottom:8px; color:#00d2ff;">Credenziali Temporanee Attive:</div>
+                    <div style="font-size:14px;">Username: <strong id="temp-user-val" style="color:#fff;">-</strong></div>
+                    <div style="font-size:14px;">Password: <strong id="temp-pass-val" style="color:#fff;">-</strong></div>
+                    <button class="btn-danger" style="margin-top:12px; padding:6px 12px; font-size:12px;" onclick="revocaCredenzialiAssistenza()">Revoca Accesso Assistenza</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sotto-Menu 3: Reset e Cancellazione Dati -->
+        <div id="pane-reset" class="settings-pane">
+            <div class="card" style="max-width:550px; border-color: rgba(255,69,58,0.4);">
+                <h3 style="color:var(--app-red);">Resetta ed Elimina Tutti i Dati</h3>
+                <p style="font-size:13px; color:var(--app-subtext);">Questa operazione cancellerà permanentemente tutti i rapportini, i turni, le note spese, l'inventario e gli utenti memorizzati.</p>
+                <div class="form-group">
+                    <label>Inserisci Password Amministratore per confermare</label>
+                    <input type="password" id="reset-confirm-pass" placeholder="Password Amministratore">
+                </div>
+                <button class="btn-danger" onclick="resetTotaleDatabase()">Elimina Definitivamente Tutti i Dati</button>
+            </div>
+        </div>
+
+        <!-- Sotto-Menu 4: Crediti e Diritto Intellettuale -->
+        <div id="pane-crediti" class="settings-pane">
+            <div class="card crediti-box" style="max-width:650px;">
+                <h3>Crediti e Proprietà Intellettuale</h3>
+                <p><strong>Programmatore & Sviluppatore:</strong> Gianpaolo Mazzola</p>
+                <p><strong>Architettura e Software Design:</strong> Gianpaolo Mazzola</p>
+                <hr style="border:none; border-top:1px solid var(--app-border); margin:15px 0;">
+                <p style="font-size:13px; color:var(--app-subtext);">
+                    © Tutti i diritti di proprietà intellettuale, il codice sorgente, la struttura e il design grafico di questa applicazione sono riservati. È vietata qualsiasi riproduzione, redistribuzione o modifica non autorizzata espressamente dall'autore.
+                </p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    Proprietà Intellettuale &copy; <span id="year-copy"></span> Gianpaolo Mazzola - Tutti i diritti riservati.
+</footer>
+
+<script>
+    if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBjVqPtYVt8DySNuFqe7uR7YafR45pVsel",
+        authDomain: "rapportini-pros.firebaseapp.com",
+        projectId: "rapportini-pros",
+        storageBucket: "rapportini-pros.firebasestorage.app",
+        messagingSenderId: "185345615117",
+        appId: "1:185345615117:web:5ad71e41f72b09a5633c44",
+        measurementId: "G-21Z3R7C59H"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let utenteCollegato = null;
+    let menuAttivoId = '';
+    let adminCredentials = { user: "admin", pass: "admin" };
+    let tempSupportCreds = null;
+
+    document.getElementById('year-copy').innerText = new Date().getFullYear();
+    document.getElementById('rap-data').valueAsDate = new Date();
+    document.getElementById('turno-data').valueAsDate = new Date();
+    document.getElementById('spesa-data').valueAsDate = new Date();
+
+    async function caricaConfigurazioneAdmin() {
+        let doc = await db.collection('config').doc('admin_credentials').get();
+        if(doc.exists) adminCredentials = doc.data();
+        else await db.collection('config').doc('admin_credentials').set(adminCredentials);
+        
+        document.getElementById('edit-admin-user').value = adminCredentials.user;
+        document.getElementById('edit-admin-pass').value = adminCredentials.pass;
+
+        let docSupp = await db.collection('config').doc('support_credentials').get();
+        if(docSupp.exists && docSupp.data().attivo) {
+            tempSupportCreds = docSupp.data();
+            mostraBoxAssistenza(tempSupportCreds.user, tempSupportCreds.pass);
+        }
+    }
+    caricaConfigurazioneAdmin();
+
+    function toggleMenu(apri) {
+        if(!menuAttivoId) return;
+        const menu = document.getElementById(menuAttivoId);
+        const overlay = document.getElementById('drawer-overlay');
+        if (apri) {
+            menu.classList.add('open');
+            overlay.classList.add('active');
+        } else {
+            menu.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+    }
+
+    function switchSettingsPane(paneId, btn) {
+        document.querySelectorAll('.settings-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(paneId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    async function salvaCredenzialiAdmin() {
+        let u = document.getElementById('edit-admin-user').value.trim();
+        let p = document.getElementById('edit-admin-pass').value.trim();
+        if(!u || !p) return alert("Inserisci credenziali valide!");
+
+        adminCredentials = { user: u, pass: p };
+        await db.collection('config').doc('admin_credentials').set(adminCredentials);
+        alert("Credenziali Amministratore aggiornate!");
+    }
+
+    async function generaCredenzialiAssistenza() {
+        let tempUser = "support_" + Math.floor(1000 + Math.random() * 9000);
+        let tempPass = "help" + Math.floor(100000 + Math.random() * 900000);
+        
+        tempSupportCreds = { user: tempUser, pass: tempPass, attivo: true };
+        await db.collection('config').doc('support_credentials').set(tempSupportCreds);
+        mostraBoxAssistenza(tempUser, tempPass);
+        alert("Credenziali Temporanee Assistenza Generate!");
+    }
+
+    function mostraBoxAssistenza(u, p) {
+        document.getElementById('temp-user-val').innerText = u;
+        document.getElementById('temp-pass-val').innerText = p;
+        document.getElementById('box-assistenza-temp').style.display = 'block';
+    }
+
+    async function revocaCredenzialiAssistenza() {
+        await db.collection('config').doc('support_credentials').set({ attivo: false });
+        tempSupportCreds = null;
+        document.getElementById('box-assistenza-temp').style.display = 'none';
+        alert("Accesso Assistenza Revocato!");
+    }
+
+    async function resetTotaleDatabase() {
+        let passInserted = document.getElementById('reset-confirm-pass').value.trim();
+        if(!passInserted) return alert("Inserisci la password amministratore!");
+        if(passInserted !== adminCredentials.pass) return alert("Password Amministratore non corretta!");
+
+        if(!confirm("SEI SICURO? Tutti i dati verranno eliminati definitivamente senza possibilità di recupero.")) return;
+
+        const collezioni = ['rapportini', 'turni', 'spese', 'inventario', 'utenti'];
+        for(let col of collezioni) {
+            let snap = await db.collection(col).get();
+            let batch = db.batch();
+            snap.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+        }
+
+        document.getElementById('reset-confirm-pass').value = '';
+        alert("Tutti i dati sono stati resettati ed eliminati con successo!");
+    }
+
+    async function effettuaLogin(e) {
+        e.preventDefault();
+        let u = document.getElementById('login-username').value.trim();
+        let p = document.getElementById('login-password').value.trim();
+
+        if (u === adminCredentials.user && p === adminCredentials.pass) {
+            utenteCollegato = { user: u, ruolo: "amministratore", nome: "Admin" };
+            apriSezione('sec-amministratore', 'menu-admin');
+            caricaDatiAdmin();
+            return;
+        }
+
+        if (tempSupportCreds && tempSupportCreds.attivo && u === tempSupportCreds.user && p === tempSupportCreds.pass) {
+            utenteCollegato = { user: u, ruolo: "amministratore", nome: "Assistenza Remota" };
+            apriSezione('sec-amministratore', 'menu-admin');
+            caricaDatiAdmin();
+            return;
+        }
+
+        try {
+            const snapshot = await db.collection('utenti').where('user', '==', u).where('pass', '==', p).get();
+            if (!snapshot.empty) {
+                utenteCollegato = snapshot.docs[0].data();
+                apriSezione('sec-operatore', 'menu-operatore');
+                caricaDatiOperatore();
+            } else alert("Credenziali errate!");
+        } catch (err) { alert("Errore di connessione: " + err.message); }
+    }
+
+    function apriSezione(idSezione, idMenu) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('sec-login').classList.remove('active');
+        
+        menuAttivoId = idMenu;
+        document.getElementById(idSezione).classList.add('active');
+        document.getElementById('btn-menu').style.display = 'flex';
+        document.getElementById('user-info-header').style.display = 'flex';
+        document.getElementById('label-utente').innerText = `${utenteCollegato.nome}`;
+    }
+
+    function logout() {
+        utenteCollegato = null;
+        toggleMenu(false);
+        menuAttivoId = '';
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('sec-login').classList.add('active');
+        document.getElementById('btn-menu').style.display = 'none';
+        document.getElementById('user-info-header').style.display = 'none';
+    }
+
+    async function salvaRapportino() {
+        let d = document.getElementById('rap-data').value.split('-').reverse().join('/');
+        let c = document.getElementById('rap-cantiere').value.trim();
+        let ore = document.getElementById('rap-ore').value;
+        let spieg = document.getElementById('rap-spiegazione').value.trim();
+        let mat = document.getElementById('rap-materiali').value.trim();
+
+        if(!c || !ore) return alert("Compila cantiere ed ore!");
+
+        await db.collection('rapportini').add({
+            data: d, operatore: utenteCollegato.nome, cantiere: c, ore: ore, spiegazione: spieg, materiali: mat, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert("Rapportino inviato internamente con successo!");
+        document.getElementById('rap-cantiere').value = '';
+        document.getElementById('rap-ore').value = '';
+        document.getElementById('rap-spiegazione').value = '';
+        document.getElementById('rap-materiali').value = '';
+    }
+
+    async function creaOperatore() {
+        let nome = document.getElementById('new-op-nome').value.trim();
+        let user = document.getElementById('new-op-user').value.trim();
+        let pass = document.getElementById('new-op-pass').value.trim();
+
+        if (!nome || !user || !pass) return alert("Compila tutti i campi!");
+        await db.collection('utenti').doc(user).set({ nome, user, pass, ruolo: 'operatore' });
+        alert("Utente creato!");
+        document.getElementById('new-op-nome').value = '';
+        document.getElementById('new-op-user').value = '';
+        document.getElementById('new-op-pass').value = '';
+    }
+
+    function caricaOperatori() {
+        db.collection('utenti').onSnapshot(snapshot => {
+            let html = '';
+            snapshot.forEach(doc => {
+                let u = doc.data();
+                html += `<tr>
+                    <td><input type="text" id="edit-nome-${doc.id}" value="${u.nome}"></td>
+                    <td><input type="text" id="edit-user-${doc.id}" value="${u.user}" disabled></td>
+                    <td><input type="text" id="edit-pass-${doc.id}" value="${u.pass}"></td>
+                    <td>
+                        <button class="btn-warning" onclick="aggiornaOperatore('${doc.id}')">Salva</button>
+                        <button class="btn-danger" style="padding:6px 10px;" onclick="eliminaOperatore('${doc.id}')">Elimina</button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('corpo-lista-operatori').innerHTML = html;
+        });
+    }
+
+    async function aggiornaOperatore(id) {
+        let nuovoNome = document.getElementById(`edit-nome-${id}`).value;
+        let nuovaPass = document.getElementById(`edit-pass-${id}`).value;
+        await db.collection('utenti').doc(id).update({ nome: nuovoNome, pass: nuovaPass });
+        alert("Dati modificati!");
+    }
+
+    async function eliminaOperatore(id) {
+        if(confirm("Eliminare l'utente?")) await db.collection('utenti').doc(id).delete();
+    }
+
+    /* NUOVA FUNZIONE IMPORTAZIONE XML ROBUSTA (SUPPORTA NAMESPACE SDI) */
+    function importaFatturaXML() {
+        let fileInput = document.getElementById('xml-file');
+        if(fileInput.files.length === 0) return alert("Seleziona un file XML!");
+
+        let reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                let parser = new DOMParser();
+                let xmlDoc = parser.parseFromString(e.target.result, "text/xml");
+                
+                // Gestione universale con wildcard sui namespace XML
+                let linee = xmlDoc.getElementsByTagNameNS("*", "DettaglioLinee");
+                if (linee.length === 0) {
+                    linee = xmlDoc.querySelectorAll("DettaglioLinee");
+                }
+
+                let conteggioAggiornati = 0;
+
+                for(let i = 0; i < linee.length; i++) {
+                    let elem = linee[i];
+                    let descNode = elem.getElementsByTagNameNS("*", "Descrizione")[0] || elem.querySelector("Descrizione");
+                    let qtaNode = elem.getElementsByTagNameNS("*", "Quantita")[0] || elem.querySelector("Quantita");
+
+                    if(descNode && descNode.textContent.trim()) {
+                        let nomeProdotto = descNode.textContent.trim();
+                        let qta = qtaNode ? parseFloat(qtaNode.textContent) : 1;
+                        if(isNaN(qta) || qta <= 0) qta = 1;
+
+                        // Generiamo una chiave ID sicura per Firestore
+                        let docKey = encodeURIComponent(nomeProdotto.toLowerCase().replace(/[^a-z0-9]/gi, '_'));
+                        let docRef = db.collection('inventario').doc(docKey);
+                        let doc = await docRef.get();
+
+                        if(doc.exists) {
+                            let giacenzaAttuale = parseFloat(doc.data().giacenza) || 0;
+                            await docRef.update({ giacenza: giacenzaAttuale + qta, nome: nomeProdotto });
+                        } else {
+                            await docRef.set({ nome: nomeProdotto, giacenza: qta });
+                        }
+                        conteggioAggiornati++;
+                    }
+                }
+
+                if (conteggioAggiornati > 0) {
+                    alert(`XML elaborato! Inseriti/Aggiornati ${conteggioAggiornati} articoli nell'inventario.`);
+                } else {
+                    alert("Impossibile trovare nodi prodotti/DettaglioLinee validi all'interno del file XML selezionato.");
+                }
+                fileInput.value = '';
+
+            } catch(err) {
+                alert("Errore nell'analisi dell'XML: " + err.message);
+            }
+        };
+        reader.readAsText(fileInput.files[0]);
+    }
+
+    async function importaFatturaPDF() {
+        let fileInput = document.getElementById('pdf-file');
+        if (fileInput.files.length === 0) return alert("Seleziona un file PDF!");
+
+        let file = fileInput.files[0];
+        let fileReader = new FileReader();
+
+        fileReader.onload = async function() {
+            let typedarray = new Uint8Array(this.result);
+            
+            try {
+                let pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let fullText = "";
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    let page = await pdf.getPage(i);
+                    let textContent = await page.getTextContent();
+                    let pageText = textContent.items.map(item => item.str).join(" ");
+                    fullText += pageText + "\n";
+                }
+
+                let lines = fullText.split('\n');
+                let prodottiTrovati = 0;
+
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line || line.length < 3) continue;
+
+                    let matchQta = line.match(/(?:x\s*|q.tà\s*|qta\s*|pzn?\s*)?(\d+)\s*[-x:]?\s*([A-Za-z0-9àèéìòù\s\-\.\/]+)/i) || 
+                                   line.match(/([A-Za-z0-9àèéìòù\s\-\.\/]+?)\s*(?:x|q.tà|qta|pzn?)?\s*(\d+)\s*(?:pz|pezzi)?$/i);
+
+                    if (matchQta) {
+                        let nomeProdotto = "";
+                        let qta = 1;
+
+                        if (!isNaN(parseFloat(matchQta[1]))) {
+                            qta = parseFloat(matchQta[1]);
+                            nomeProdotto = matchQta[2].trim();
+                        } else {
+                            nomeProdotto = matchQta[1].trim();
+                            qta = parseFloat(matchQta[2]);
+                        }
+
+                        if (nomeProdotto.length >= 3 && !/totale|imponibile|iva|euro|fattura/i.test(nomeProdotto)) {
+                            let docKey = encodeURIComponent(nomeProdotto.toLowerCase().replace(/[^a-z0-9]/gi, '_'));
+                            let docRef = db.collection('inventario').doc(docKey);
+                            let doc = await docRef.get();
+
+                            if (doc.exists) {
+                                let giacenzaAttuale = parseFloat(doc.data().giacenza) || 0;
+                                await docRef.update({ giacenza: giacenzaAttuale + qta, nome: nomeProdotto });
+                            } else {
+                                await docRef.set({ nome: nomeProdotto, giacenza: qta });
+                            }
+                            prodottiTrovati++;
+                        }
+                    }
+                }
+
+                if (prodottiTrovati > 0) {
+                    alert(`PDF elaborato! Aggiornati ${prodottiTrovati} prodotti in magazzino.`);
+                } else {
+                    alert("PDF analizzato, ma non sono state individuate righe prodotto formattate chiaramente.");
+                }
+                fileInput.value = '';
+
+            } catch (err) {
+                alert("Errore durante la lettura del PDF: " + err.message);
+            }
+        };
+
+        fileReader.readAsArrayBuffer(file);
+    }
+
+    /* CARICAMENTO E MONITORAGGIO REALTIME INVENTARIO */
+    function caricaInventario() {
+        db.collection('inventario').onSnapshot(snapshot => {
+            let html = '';
+            if (snapshot.empty) {
+                html = `<tr><td colspan="3" style="text-align:center; color:var(--app-subtext);">Nessun prodotto presente in inventario.</td></tr>`;
+            } else {
+                snapshot.forEach(doc => {
+                    let item = doc.data();
+                    let giacenza = item.giacenza !== undefined ? item.giacenza : 0;
+                    let nome = item.nome || doc.id;
+                    html += `<tr>
+                        <td><strong>${nome}</strong></td>
+                        <td>${giacenza}</td>
+                        <td><button class="btn-danger" style="padding:6px 10px;" onclick="eliminaProdotto('${doc.id}')">Elimina</button></td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('corpo-inventario').innerHTML = html;
+        }, err => {
+            console.error("Errore nel caricamento inventario:", err);
+        });
+    }
+
+    async function eliminaProdotto(id) {
+        if(confirm("Eliminare il prodotto?")) await db.collection('inventario').doc(id).delete();
+    }
+
+    async function salvaTurnoOperatore() {
+        let d = document.getElementById('turno-data').value.split('-').reverse().join('/');
+        let t = document.getElementById('turno-tipo').value;
+        let n = document.getElementById('turno-note').value;
+        await db.collection('turni').add({ data: d, operatore: utenteCollegato.nome, tipo: t, note: n });
+        alert("Turno salvato!");
+    }
+
+    function salvaNotaSpesa() {
+        let d = document.getElementById('spesa-data').value.split('-').reverse().join('/');
+        let c = document.getElementById('spesa-cat').value;
+        let imp = document.getElementById('spesa-importo').value;
+        let desc = document.getElementById('spesa-desc').value;
+        let fileInput = document.getElementById('spesa-foto');
+
+        if(!imp) return alert("Inserisci l'importo!");
+
+        let inviaData = async (fotoBase64) => {
+            await db.collection('spese').add({ data: d, operatore: utenteCollegato.nome, cat: c, importo: imp, desc: desc, foto: fotoBase64 || null });
+            alert("Spesa inviata!");
+        };
+
+        if(fileInput.files.length > 0) {
+            let reader = new FileReader();
+            reader.onload = e => inviaData(e.target.result);
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            inviaData(null);
+        }
+    }
+
+    function caricaDatiOperatore() {
+        db.collection('rapportini').where('operatore', '==', utenteCollegato.nome).onSnapshot(snapshot => {
+            let html = '';
+            snapshot.forEach(doc => {
+                let r = doc.data();
+                html += `<tr><td>${r.data}</td><td>${r.cantiere}</td><td>${r.ore}</td><td>${r.spiegazione || '-'}</td><td>${r.materiali || '-'}</td></tr>`;
+            });
+            document.getElementById('corpo-miei-rapportini').innerHTML = html;
+        });
+
+        db.collection('turni').where('operatore', '==', utenteCollegato.nome).onSnapshot(snapshot => {
+            let html = '';
+            snapshot.forEach(doc => {
+                let t = doc.data();
+                html += `<tr><td>${t.data}</td><td>${t.tipo}</td><td>${t.note || '-'}</td></tr>`;
+            });
+            document.getElementById('corpo-miei-turni').innerHTML = html;
+        });
+
+        db.collection('spese').where('operatore', '==', utenteCollegato.nome).onSnapshot(snapshot => {
+            let html = '';
+            snapshot.forEach(doc => {
+                let s = doc.data();
+                html += `<tr><td>${s.data}</td><td>${s.cat}</td><td>€ ${parseFloat(s.importo).toFixed(2)}</td><td>${s.desc}</td>
+                <td>${s.foto ? `<img src="${s.foto}" class="img-preview">` : 'Nessuna'}</td></tr>`;
+            });
+            document.getElementById('corpo-mie-spese').innerHTML = html;
+        });
+    }
+
+    function caricaDatiAdmin() {
+        caricaOperatori();
+        caricaInventario();
+
+        db.collection('rapportini').onSnapshot(snapshot => {
+            let html = '';
+            snapshot.forEach(doc => {
+                let r = doc.data();
+                html += `<tr><td>${r.data}</td><td><strong>${r.operatore}</strong></td><td>${r.cantiere}</td><td>${r.ore}</td><td>${r.spiegazione || '-'}</td><td>${r.materiali || '-'}</td></tr>`;
+            });
+            document.getElementById('corpo-adm-rapportini').innerHTML = html;
+        });
+
+        db.collection('turni').onSnapshot(snapshot => {
+            let html = '';
+            snapshot.forEach(doc => {
+                let t = doc.data();
+                html += `<tr><td>${t.data}</td><td><strong>${t.operatore}</strong></td><td>${t.tipo}</td><td>${t.note || '-'}</td></tr>`;
+            });
+            document.getElementById('corpo-adm-turni').innerHTML = html;
+        });
+
+        db.collection('spese').onSnapshot(snapshot => {
+            let html = '';
+            snapshot.forEach(doc => {
+                let s = doc.data();
+                html += `<tr><td>${s.data}</td><td><strong>${s.operatore}</strong></td><td>${s.cat}</td><td>€ ${parseFloat(s.importo).toFixed(2)}</td><td>${s.desc}</td>
+                <td>${s.foto ? `<a href="${s.foto}" target="_blank"><img src="${s.foto}" class="img-preview"></a>` : 'Nessuna'}</td></tr>`;
+            });
+            document.getElementById('corpo-adm-spese').innerHTML = html;
+        });
+    }
+
+    function switchAdminTab(tab, btn) {
+        document.querySelectorAll('#sec-amministratore .sub-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('#menu-admin .sidebar-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`sub-${tab}`).classList.add('active');
+        btn.classList.add('active');
+        toggleMenu(false);
+    }
+
+    function switchOpTab(tab, btn) {
+        document.querySelectorAll('#sec-operatore .sub-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('#menu-operatore .sidebar-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`sub-op-${tab}`).classList.add('active');
+        btn.classList.add('active');
+        toggleMenu(false);
+    }
+</script>
+</body>
+</html>
