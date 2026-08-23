@@ -4,7 +4,6 @@ import json
 from typing import List, Dict, Any
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
-import pdfplumber
 
 app = Flask(__name__)
 
@@ -30,7 +29,7 @@ class ApplicationDatabase:
     def _init_db(self):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            # Gestione Documenti PDF
+            # 1. Tabella PDF caricati
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS pdf_documents (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,7 +42,7 @@ class ApplicationDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            # Tabella Prodotti Selezionabili dagli Operatori
+            # 2. Tabella Prodotti disponibili per la selezione
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS prodotti (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,7 +51,7 @@ class ApplicationDatabase:
                     descrizione TEXT
                 )
             """)
-            # Tabella Rapportini Operatore (con supporto prodotti usati e Logo)
+            # 3. Tabella Rapportini Operatore (con selezione prodotti e logo)
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS rapportini (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,8 +60,8 @@ class ApplicationDatabase:
                     data TEXT NOT NULL,
                     ore REAL NOT NULL,
                     note TEXT,
-                    prodotti_utilizzati TEXT, -- Salvati in formato JSON
-                    logo_path TEXT,
+                    prodotti_utilizzati TEXT, -- Lista JSON dei prodotti selezionati
+                    logo_path TEXT,            # Percorso del file logo salvato
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -81,12 +80,6 @@ class ApplicationDatabase:
             """, (filename, filepath, doc_number, doc_date, file_size))
             conn.commit()
             return cursor.lastrowid
-
-    def get_pdf_documents((self) -> List[Dict[str, Any]]:
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM pdf_documents ORDER BY created_at DESC")
-            return [dict(row) for row in cursor.fetchall()]
 
     # --- METODI PRODOTTI E RAPPORTINI ---
     def get_prodotti(self) -> List[Dict[str, Any]]:
@@ -114,7 +107,7 @@ db = ApplicationDatabase()
 def index():
     return render_template('index.html')
 
-# Endpoint caricamento PDF DDT
+# Endpoint 1: Caricamento e Archiviazione PDF DDT
 @app.route('/api/upload-ddt', methods=['POST'])
 def upload_ddt():
     if 'file' not in request.files:
@@ -135,18 +128,18 @@ def upload_ddt():
         doc_id = db.salva_documento_pdf(filepath, doc_number, doc_date)
         return jsonify({
             "success": True,
-            "message": "File PDF registrato nel database con successo!",
+            "message": "File PDF caricato e salvato nel database con successo!",
             "doc_id": doc_id
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# Endpoint lista prodotti (per la selezione da parte dell'operatore nel rapportino)
+# Endpoint 2: Lettura elenco prodotti per la selezione nell'interfaccia Operatore
 @app.route('/api/prodotti', methods=['GET'])
 def get_prodotti():
     return jsonify(db.get_prodotti())
 
-# Endpoint invio Rapportino Operatore (con prodotti e logo)
+# Endpoint 3: Invio Rapportino Operatore (con lista prodotti selezionati e Logo)
 @app.route('/api/rapportino', methods=['POST'])
 def salva_rapportino():
     operatore = request.form.get('operatore', '')
@@ -155,14 +148,14 @@ def salva_rapportino():
     ore = request.form.get('ore', 0.0)
     note = request.form.get('note', '')
     
-    # Riceve la lista ID o codici dei prodotti selezionati
+    # Riceve la lista JSON dei prodotti selezionati (es. ["ART-01", "ART-02"])
     prodotti_raw = request.form.get('prodotti', '[]')
     try:
         prodotti = json.loads(prodotti_raw)
     except json.JSONDecodeError:
         prodotti = []
 
-    # Gestione Upload del Logo
+    # Salvataggio eventuale file Logo
     logo_path = ""
     if 'logo' in request.files:
         logo_file = request.files['logo']
